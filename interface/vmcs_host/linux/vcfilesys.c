@@ -42,14 +42,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ctype.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#ifdef __FreeBSD__
+#include <sys/mount.h>
+#else
 #include <sys/statfs.h>
+#endif
 #include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
 #include <ctype.h>
 #include <limits.h>
 
-#if !defined(ANDROID) && !defined( __USE_FILE_OFFSET64 )
+#if !defined(ANDROID) && !defined(__FreeBSD__) && !defined( __USE_FILE_OFFSET64 )
 #error   "__USE_FILE_OFFSET64 isn't defined"
 #endif
 
@@ -280,7 +284,11 @@ int64_t vc_hostfs_lseek64(int fildes, int64_t offset, int whence)
       else
       {
          // File is not a FIFO, so do the seek
+#ifdef __FreeBSD__
+         read_offset = lseek(fildes, offset, whence);
+#else
          read_offset = lseek64(fildes, offset, whence);
+#endif
       }
       p_file_info_table[fildes].read_offset = read_offset;
       DEBUG_MINOR("vc_hostfs_lseek returning %lld)", read_offset);

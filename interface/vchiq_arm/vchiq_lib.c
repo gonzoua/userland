@@ -934,7 +934,7 @@ vchi_msg_dequeue( VCHI_SERVICE_HANDLE_T handle,
       RETRY(ret, ioctl(service->fd, VCHIQ_IOC_DEQUEUE_MESSAGE, &args));
       if (ret >= 0)
       {
-         *actual_msg_size = ret;
+         *actual_msg_size = args.bufsize;
          ret = 0;
       }
    }
@@ -1473,10 +1473,10 @@ completion_thread(void *arg)
 
       RETRY(ret, ioctl(instance->fd, VCHIQ_IOC_AWAIT_COMPLETION, &args));
 
-      if (ret <= 0)
+      if (ret < 0)
          break;
 
-      for (i = 0; i < ret; i++)
+      for (i = 0; i < args.count; i++)
       {
          VCHIQ_COMPLETION_DATA_T *completion = &completions[i];
          VCHIQ_SERVICE_T *service = (VCHIQ_SERVICE_T *)completion->service_userdata;
@@ -1644,7 +1644,7 @@ fill_peek_buf(VCHI_SERVICE_T *service,
 
          if (ret >= 0)
          {
-            service->peek_size = ret;
+            service->peek_size = args.bufsize;
             ret = 0;
          }
          else
