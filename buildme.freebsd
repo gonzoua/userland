@@ -1,0 +1,16 @@
+#!/bin/sh
+if [ -z "$CMAKE" ]; then
+	CMAKE=cmake
+fi
+
+if [ -z "$DESTDIR" ]; then
+	DESTDIR=/opt/vc
+fi
+
+rm -Rf build
+mkdir -p build/arm-freebsd/release/
+cd build/arm-freebsd/release/
+$CMAKE -DCMAKE_TOOLCHAIN_FILE=../../../makefiles/cmake/toolchains/arm-freebsd.cmake -DCMAKE_BUILD_TYPE=Release ../../..
+make
+make DESTDIR=$DESTDIR install
+cd ../../../

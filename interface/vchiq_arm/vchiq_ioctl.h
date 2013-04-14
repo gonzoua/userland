@@ -28,7 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef VCHIQ_IOCTLS_H
 #define VCHIQ_IOCTLS_H
 
+#ifdef __FreeBSD__
+#include <sys/ioctl.h>
+#else
 #include <linux/ioctl.h>
+#endif
 #include "vchiq_if.h"
 
 #define VCHIQ_IOC_MAGIC 0xc4

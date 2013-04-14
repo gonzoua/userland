@@ -503,7 +503,12 @@ void rpc_release(CLIENT_THREAD_STATE_T *thread)
 void rpc_call8_makecurrent(CLIENT_THREAD_STATE_T *thread, uint32_t id, uint32_t p0,
    uint32_t p1, uint32_t p2, uint32_t p3, uint32_t p4, uint32_t p5, uint32_t p6, uint32_t p7)
 {
-   if (thread->merge_pos == CLIENT_MAKE_CURRENT_SIZE && *((uint32_t *)thread->merge_buffer) == EGLINTMAKECURRENT_ID)
+   uint8_t *mbuf = (uint8_t *)thread->merge_buffer;
+   uint32_t tmp = (mbuf[0] <<  0) |
+                  (mbuf[1] <<  8) |
+                  (mbuf[2] << 16) |
+                  (mbuf[3] << 24);
+   if (thread->merge_pos == CLIENT_MAKE_CURRENT_SIZE && tmp == EGLINTMAKECURRENT_ID)
    {
       rpc_begin(thread);
       vcos_log_trace("rpc_call8_makecurrent collapse onto previous makecurrent");
