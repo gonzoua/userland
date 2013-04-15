@@ -1,5 +1,5 @@
 
-add_definitions(-Wall -Werror)
+add_definitions(-Wall -Werror -Wno-error=undefined-inline)
 
 add_library(mmal SHARED util/mmal_util.c)
 
