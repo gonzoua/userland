@@ -66,7 +66,6 @@ on 1 byte), but shoehorning those bytes into integers efficiently is messy.
 # define HASH_LITTLE_ENDIAN 1
 # define HASH_BIG_ENDIAN 0
 
-#ifndef __arm__  // Use the version in khrn_int_hash_asm.s instead
 /*
 --------------------------------------------------------------------
  This works on all machines.  To be useful, it requires
@@ -113,7 +112,6 @@ uint32_t        initval)         /* the previous hash, or an arbitrary value */
   return c;
 }
 
-#endif
 
 /*
 -------------------------------------------------------------------------------

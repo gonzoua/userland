@@ -52,7 +52,6 @@ set(CLIENT_SOURCE
    common/khrn_client_pointermap.c
    common/khrn_client_vector.c
    common/khrn_int_hash.c
-   common/khrn_int_hash_asm.s
    common/khrn_client_cache.c)
 
 add_library(EGL ${SHARED} ${EGL_SOURCE})
