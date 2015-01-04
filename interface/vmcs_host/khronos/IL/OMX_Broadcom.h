@@ -220,6 +220,11 @@ typedef struct OMX_DISPLAYRECTTYPE {
 typedef enum OMX_DISPLAYMODETYPE {
    OMX_DISPLAY_MODE_FILL = 0,
    OMX_DISPLAY_MODE_LETTERBOX = 1,
+   // these allow a left eye source->dest to be specified and the right eye mapping will be inferred by symmetry
+   OMX_DISPLAY_MODE_STEREO_LEFT_TO_LEFT = 2,
+   OMX_DISPLAY_MODE_STEREO_TOP_TO_TOP = 3,
+   OMX_DISPLAY_MODE_STEREO_LEFT_TO_TOP = 4,
+   OMX_DISPLAY_MODE_STEREO_TOP_TO_LEFT = 5,
    OMX_DISPLAY_MODE_DUMMY = 0x7FFFFFFF
 } OMX_DISPLAYMODETYPE;
 
@@ -476,6 +481,37 @@ R' = coeff[1] * sample[N] + coeff[3] * sample[N+1] + coeff[5] * sample[N+2] + co
 \code{coeff} describes the downmixing coefficients
 */
 
+/* OMX_IndexConfigBrcmAudioDownmixCoefficients8x8: Audio Downmix Coefficients */
+typedef struct OMX_CONFIG_BRCMAUDIODOWNMIXCOEFFICIENTS8x8 {
+   OMX_U32 nSize;
+   OMX_VERSIONTYPE nVersion;
+   OMX_U32 nPortIndex;
+   OMX_U32 coeff[64];
+} OMX_CONFIG_BRCMAUDIODOWNMIXCOEFFICIENTS8x8;
+/*
+This config sets the platform-specific audio downmixing coefficients for the 
+audio mixer component. The coefficients are 16.16 fixed point.
+The coefficients are a 8*8 mixing matrix from 8 input channels to 8 outputs channels
+
+\code{coeff} describes the downmixing coefficients
+*/
+
+/* OMX_IndexConfigBrcmAudioMaxSample: Maximum sample seen */
+typedef struct OMX_CONFIG_BRCMAUDIOMAXSAMPLE {
+   OMX_U32 nSize;
+   OMX_VERSIONTYPE nVersion;
+   OMX_U32 nPortIndex;
+   OMX_U32 nMaxSample;
+   OMX_TICKS nTimeStamp;
+} OMX_CONFIG_BRCMAUDIOMAXSAMPLE;
+/*
+This gets the largest sample produced (after downmixing with OMX_CONFIG_BRCMAUDIODOWNMIXCOEFFICIENTS8x8) 
+since this config was last read. The nTimestamp is the earliest timestamp processed. 
+This can be used for DRC schemes 
+
+\code{coeff} maximum sample seen in current block
+*/
+
 /* OMX_IndexConfigPlayMode: Play Mode */
 typedef enum OMX_PLAYMODETYPE {
    OMX_PLAYMODE_NORMAL,
@@ -571,6 +607,7 @@ typedef struct OMX_PARAM_BRCMPORTEGLTYPE {
 /*
 */
 
+#define OMX_CONFIG_IMAGEFILTERPARAMS_MAXPARAMS 6
 /* OMX_IndexConfigCommonImageFilterParameters: Parameterized Image Filter */
 typedef struct OMX_CONFIG_IMAGEFILTERPARAMSTYPE {
    OMX_U32 nSize;
@@ -578,7 +615,7 @@ typedef struct OMX_CONFIG_IMAGEFILTERPARAMSTYPE {
    OMX_U32 nPortIndex;
    OMX_IMAGEFILTERTYPE eImageFilter;
    OMX_U32 nNumParams;
-   OMX_U32 nParams[5];
+   OMX_U32 nParams[OMX_CONFIG_IMAGEFILTERPARAMS_MAXPARAMS];
 } OMX_CONFIG_IMAGEFILTERPARAMSTYPE;
 /*
 This structure contains optional parameters for some image
@@ -1627,6 +1664,7 @@ typedef struct OMX_CONFIG_U8TYPE {
 typedef struct OMX_CONFIG_CAMERASETTINGSTYPE {
     OMX_U32 nSize;
     OMX_VERSIONTYPE nVersion;
+    OMX_U32 nPortIndex;               /**< port that this structure applies to */
     OMX_U32 nExposure;
     OMX_U32 nAnalogGain;
     OMX_U32 nDigitalGain;
@@ -2290,6 +2328,69 @@ typedef struct OMX_CONFIG_ZEROSHUTTERLAGTYPE
    OMX_U32 bConcurrentCapture;      /**< Perform concurrent captures for full ZSL. */
 
 } OMX_CONFIG_ZEROSHUTTERLAGTYPE;
+
+typedef struct OMX_PARAM_BRCMVIDEODECODECONFIGVD3TYPE {
+   OMX_U32 nSize;                      /**< size of the structure in bytes, including
+                                            configuration data */
+   OMX_VERSIONTYPE nVersion;           /**< OMX specification version information */
+   OMX_U8 config[1];                   /**< Configuration data (a VD3_CONFIGURE_T) */
+} OMX_PARAM_BRCMVIDEODECODECONFIGVD3TYPE;
+
+typedef struct OMX_CONFIG_CUSTOMAWBGAINSTYPE {
+   OMX_U32 nSize;                      /**< size of the structure in bytes, including
+                                            configuration data */
+   OMX_VERSIONTYPE nVersion;           /**< OMX specification version information */
+   OMX_U32 xGainR;                     /**< Red gain - 16p16 */
+   OMX_U32 xGainB;                     /**< Blue gain - 16p16 */
+} OMX_CONFIG_CUSTOMAWBGAINSTYPE;
+
+/* OMX_IndexConfigBrcmRenderStats: Query port statistics */
+typedef struct OMX_CONFIG_BRCMRENDERSTATSTYPE {
+   OMX_U32 nSize;
+   OMX_VERSIONTYPE nVersion;
+   OMX_U32 nPortIndex;
+   OMX_BOOL nValid;
+   OMX_U32 nMatch;
+   OMX_U32 nPeriod;
+   OMX_U32 nPhase;
+   OMX_U32 nPixelClockNominal;
+   OMX_U32 nPixelClock;
+   OMX_U32 nHvsStatus;
+   OMX_U32 dummy0[2];
+} OMX_CONFIG_BRCMRENDERSTATSTYPE;
+
+#define OMX_BRCM_MAXANNOTATETEXTLEN 256
+typedef struct OMX_CONFIG_BRCMANNOTATETYPE {
+   OMX_U32 nSize;
+   OMX_VERSIONTYPE nVersion;
+   OMX_BOOL bEnable;
+   OMX_BOOL bShowShutter;
+   OMX_BOOL bShowAnalogGain;
+   OMX_BOOL bShowLens;
+   OMX_BOOL bShowCaf;
+   OMX_BOOL bShowMotion;
+   OMX_BOOL bShowFrameNum;
+   OMX_BOOL bBlackBackground;
+   OMX_U8 sText[OMX_BRCM_MAXANNOTATETEXTLEN];
+} OMX_CONFIG_BRCMANNOTATETYPE;
+
+typedef enum OMX_BRCMSTEREOSCOPICMODETYPE {
+   OMX_STEREOSCOPIC_NONE = 0,
+   OMX_STEREOSCOPIC_SIDEBYSIDE = 1,
+   OMX_STEREOSCOPIC_TOPBOTTOM = 2,
+   OMX_STEREOSCOPIC_MAX = 0x7FFFFFFF,
+} OMX_BRCMSTEREOSCOPICMODETYPE;
+
+typedef struct OMX_CONFIG_BRCMSTEREOSCOPICMODETYPE {
+   OMX_U32 nSize;
+   OMX_VERSIONTYPE nVersion;
+
+   OMX_U32 nPortIndex;                    /**< port that this structure applies to */
+   OMX_BRCMSTEREOSCOPICMODETYPE eMode;    /**< Packing mode */
+   OMX_BOOL bDecimate;                    /**< Half/half mode
+                                          (pixel aspect ratio = 1:2 or 2:1 if set. 1:1 if not set) */
+   OMX_BOOL bSwapEyes;                    /**< False = left eye first. True = right eye first. */
+} OMX_CONFIG_BRCMSTEREOSCOPICMODETYPE;
 
 #endif
 /* File EOF */

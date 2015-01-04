@@ -85,6 +85,11 @@ static struct {
    {MMAL_ENCODING_RGB24, 3, 1},
    {MMAL_ENCODING_BGR16, 2, 1},
    {MMAL_ENCODING_BGR24, 3, 1},
+
+   {MMAL_ENCODING_YUYV,  2, 1},
+   {MMAL_ENCODING_YVYU,  2, 1},
+   {MMAL_ENCODING_UYVY,  2, 1},
+   {MMAL_ENCODING_VYUY,  2, 1},
    /* {MMAL_ENCODING_YUVUV128, 1, 1}, That's a special case which must not be included */
    {MMAL_ENCODING_UNKNOWN, 0, 0}
 };
@@ -322,6 +327,7 @@ MMAL_PORT_T *mmal_util_get_port(MMAL_COMPONENT_T *comp, MMAL_PORT_TYPE_T type, u
       return NULL;
    }
    if (index < num)
+      /* coverity[ptr_arith] num is 1 here */
       return list[index];
    else
       return NULL;

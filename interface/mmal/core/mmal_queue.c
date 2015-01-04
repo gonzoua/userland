@@ -59,9 +59,12 @@ MMAL_QUEUE_T *mmal_queue_create(void)
       return 0;
    }
 
+   /* gratuitous lock for coverity */ vcos_mutex_lock(&queue->lock);
    queue->length = 0;
    queue->first = 0;
    queue->last = &queue->first;
+   /* gratuitous unlock for coverity */ vcos_mutex_unlock(&queue->lock);
+
    return queue;
 }
 
@@ -128,6 +131,21 @@ MMAL_BUFFER_HEADER_T *mmal_queue_wait(MMAL_QUEUE_T *queue)
 	vcos_semaphore_wait(&queue->semaphore);
    vcos_semaphore_post(&queue->semaphore);
    return mmal_queue_get(queue);
+}
+
+MMAL_BUFFER_HEADER_T *mmal_queue_timedwait(MMAL_QUEUE_T *queue, VCOS_UNSIGNED timeout)
+{
+    int ret = 0;
+    if (!queue)
+        return NULL;
+
+    ret = vcos_semaphore_wait_timeout(&queue->semaphore, timeout);
+
+    if (ret != VCOS_SUCCESS)
+        return NULL;
+
+    vcos_semaphore_post(&queue->semaphore);
+    return mmal_queue_get(queue);
 }
 
 /** Get the number of MMAL_BUFFER_HEADER_T currently in a QUEUE */

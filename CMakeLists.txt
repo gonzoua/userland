@@ -3,11 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(vmcs_host_apps)
 
 set(BUILD_MMAL TRUE)
-if (ALL_APPS)
- set(BUILD_MMAL_APPS TRUE)
-else()
- set(BUILD_MMAL_APPS FALSE)
-endif()
+set(BUILD_MMAL_APPS TRUE)
 set(vmcs_root ${PROJECT_SOURCE_DIR})
 get_filename_component(VIDEOCORE_ROOT . ABSOLUTE)
 
@@ -16,6 +12,8 @@ set(VCOS_PTHREADS_BUILD_SHARED TRUE)
 include(makefiles/cmake/global_settings.cmake)
 include(makefiles/cmake/arm-linux.cmake)
 include(makefiles/cmake/vmcs.cmake)
+
+enable_language(ASM)
 
 # Global include paths
 include_directories(host_applications/framework)
@@ -39,7 +37,7 @@ add_definitions(-D_REENTRANT)
 add_definitions(-DUSE_VCHIQ_ARM -DVCHI_BULK_ALIGN=1 -DVCHI_BULK_GRANULARITY=1)
 add_definitions(-DOMX_SKIP64BIT)
 add_definitions(-DEGL_SERVER_DISPMANX)
-add_definitions(-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE)
+add_definitions(-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64)
 
 # do we actually need this?
 add_definitions(-D__VIDEOCORE4__)
@@ -62,10 +60,13 @@ add_subdirectory(interface/khronos)
 if(BUILD_MMAL)
    include_directories(interface/mmal)
    add_subdirectory(interface/mmal)
-endif()
-if(BUILD_MMAL_APPS)
    add_subdirectory(containers)
 endif()
+
+# VidTex supports Android and Linux
+if(BUILD_MMAL_APPS)
+add_subdirectory(host_applications/android/apps/vidtex)
+endif(BUILD_MMAL_APPS)
 
 add_subdirectory(middleware/openmaxil)
 
@@ -90,9 +91,6 @@ add_subdirectory(middleware/openmaxil)
 
 # VMCS Host Applications
 #add_subdirectory(host_applications/framework)
-if(BUILD_MMAL_APPS)
-   add_subdirectory(host_applications/vmcs)
-endif()
 
 # add_subdirectory(interface/vchiq/test/win32)
 
@@ -102,10 +100,6 @@ endif()
 
 # add linux apps
 add_subdirectory(host_applications/linux)
-
-# Debug sym for mmal-vc-diag and vcdbg
-#add_subdirectory(host_applications/linux/libs/debug_sym)
-
 
 set(vmcs_host_apps_VERSION_MAJOR 1)
 set(vmcs_host_apps_VERSION_MINOR 0)

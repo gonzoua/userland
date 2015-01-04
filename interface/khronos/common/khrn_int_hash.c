@@ -66,6 +66,7 @@ on 1 byte), but shoehorning those bytes into integers efficiently is messy.
 # define HASH_LITTLE_ENDIAN 1
 # define HASH_BIG_ENDIAN 0
 
+#ifndef __arm__  // Use the version in khrn_int_hash_asm.s instead
 /*
 --------------------------------------------------------------------
  This works on all machines.  To be useful, it requires
@@ -85,10 +86,8 @@ int             length,               /* the length of the key, in uint32_ts */
 uint32_t        initval)         /* the previous hash, or an arbitrary value */
 {
   uint32_t a,b,c;
-
   /* Set up the internal state */
   a = b = c = 0xdeadbeef + (((uint32_t)length)<<2) + initval;
-
   /*------------------------------------------------- handle most of the key */
   while (length > 3)
   {
@@ -113,6 +112,8 @@ uint32_t        initval)         /* the previous hash, or an arbitrary value */
   /*------------------------------------------------------ report the result */
   return c;
 }
+
+#endif
 
 /*
 -------------------------------------------------------------------------------
@@ -140,7 +141,6 @@ Use for hash table lookup, or anything where one collision in 2^^32 is
 acceptable.  Do NOT use for cryptographic purposes.
 -------------------------------------------------------------------------------
 */
-
 uint32_t khrn_hashlittle( const void *key, int length, uint32_t initval)
 {
   uint32_t a,b,c;                                          /* internal state */

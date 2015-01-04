@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2012, Broadcom Europe Ltd
+Copyright (c) 2012-2014, Broadcom Europe Ltd
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -65,6 +65,7 @@ struct vchiq_instance_struct
    int fd;
    int initialised;
    int connected;
+   int use_close_delivered;
    VCOS_THREAD_T completion_thread;
    VCOS_MUTEX_T mutex;
    int used_services;
@@ -499,23 +500,7 @@ vchiq_bulk_receive(VCHIQ_SERVICE_HANDLE_T handle,
    void *userdata,
    VCHIQ_BULK_MODE_T mode)
 {
-   VCHIQ_SERVICE_T *service = find_service_by_handle(handle);
-   VCHIQ_QUEUE_BULK_TRANSFER_T args;
-   int ret;
-
-   vcos_log_trace( "%s called service handle = 0x%08x", __func__, (uint32_t)handle );
-
-   if (!service)
-      return VCHIQ_ERROR;
-
-   args.handle = service->handle;
-   args.data = data;
-   args.size = size;
-   args.userdata = userdata;
-   args.mode = mode;
-   RETRY(ret, ioctl(service->fd, VCHIQ_IOC_QUEUE_BULK_RECEIVE, &args));
-
-   return (ret >= 0) ? VCHIQ_SUCCESS : VCHIQ_ERROR;
+   return vchiq_bulk_receive_handle(handle, VCHI_MEM_HANDLE_INVALID, data, size, userdata, mode, NULL);
 }
 
 VCHIQ_STATUS_T
@@ -537,11 +522,28 @@ vchiq_bulk_receive_handle(VCHIQ_SERVICE_HANDLE_T handle,
    void *offset,
    int size,
    void *userdata,
-   VCHIQ_BULK_MODE_T mode)
+   VCHIQ_BULK_MODE_T mode,
+   int (*copy_pagelist)())
 {
+   VCHIQ_SERVICE_T *service = find_service_by_handle(handle);
+   VCHIQ_QUEUE_BULK_TRANSFER_T args;
+   int ret;
+
    vcos_assert(memhandle == VCHI_MEM_HANDLE_INVALID);
 
-   return vchiq_bulk_receive(handle, offset, size, userdata, mode);
+   vcos_log_trace( "%s called service handle = 0x%08x", __func__, (uint32_t)handle );
+
+   if (!service)
+      return VCHIQ_ERROR;
+
+   args.handle = service->handle;
+   args.data = offset;
+   args.size = size;
+   args.userdata = userdata;
+   args.mode = mode;
+   RETRY(ret, ioctl(service->fd, VCHIQ_IOC_QUEUE_BULK_RECEIVE, &args));
+
+   return (ret >= 0) ? VCHIQ_SUCCESS : VCHIQ_ERROR;
 }
 
 int
@@ -1132,7 +1134,7 @@ int32_t
 vchi_disconnect( VCHI_INSTANCE_T instance_handle )
 {
    VCHIQ_STATUS_T status;
-   
+
    status = vchiq_shutdown((VCHIQ_INSTANCE_T)instance_handle);
 
    return (status == VCHIQ_SUCCESS) ? 0 : -1;
@@ -1324,6 +1326,46 @@ int32_t vchi_service_release( const VCHI_SERVICE_HANDLE_T handle )
 }
 
 /***********************************************************
+ * Name: vchi_service_set_option
+ *
+ * Arguments: const VCHI_SERVICE_HANDLE_T handle
+ *            VCHI_SERVICE_OPTION_T option
+ *            int value
+ *
+ * Description: Routine to set a service control option
+ *
+ * Returns: 0 on success, otherwise a non-zero error code
+ *
+ ***********************************************************/
+int32_t vchi_service_set_option( const VCHI_SERVICE_HANDLE_T handle,
+   VCHI_SERVICE_OPTION_T option, int value)
+{
+   VCHIQ_SET_SERVICE_OPTION_T args;
+   VCHI_SERVICE_T *service = find_service_by_handle(handle);
+   int ret;
+
+   switch (option)
+   {
+   case VCHI_SERVICE_OPTION_TRACE:
+      args.option = VCHIQ_SERVICE_OPTION_TRACE;
+      break;
+   default:
+      service = NULL;
+      break;
+   }
+
+   if (!service)
+      return VCHIQ_ERROR;
+
+   args.handle = service->handle;
+   args.value  = value;
+
+   RETRY(ret, ioctl(service->fd, VCHIQ_IOC_SET_SERVICE_OPTION, &args));
+
+   return ret;
+}
+
+/***********************************************************
  * Name: vchiq_dump_phys_mem
  *
  * Arguments: const VCHI_SERVICE_HANDLE_T handle
@@ -1394,9 +1436,17 @@ vchiq_lib_init(void)
          RETRY(ret, ioctl(instance->fd, VCHIQ_IOC_GET_CONFIG, &args));
          if ((ret == 0) && (config.version >= VCHIQ_VERSION_MIN) && (config.version_min <= VCHIQ_VERSION))
          {
-            instance->used_services = 0;
-            vcos_mutex_create(&instance->mutex, "VCHIQ instance");
-            instance->initialised = 1;
+            if (config.version >= VCHIQ_VERSION_LIB_VERSION)
+            {
+               RETRY(ret, ioctl(instance->fd, VCHIQ_IOC_LIB_VERSION, VCHIQ_VERSION));
+            }
+            if (ret == 0)
+            {
+               instance->used_services = 0;
+               instance->use_close_delivered = (config.version >= VCHIQ_VERSION_CLOSE_DELIVERED);
+               vcos_mutex_create(&instance->mutex, "VCHIQ instance");
+               instance->initialised = 1;
+            }
          }
          else
          {
@@ -1482,9 +1532,9 @@ completion_thread(void *arg)
          VCHIQ_SERVICE_T *service = (VCHIQ_SERVICE_T *)completion->service_userdata;
          if (service->base.callback)
          {
-            vcos_log_trace( "callback(%x, %x, %x, %x)",
+            vcos_log_trace( "callback(%x, %x, %x(%x,%x), %x)",
                completion->reason, (uint32_t)completion->header,
-               (uint32_t)&service->base, (uint32_t)completion->bulk_userdata );
+               (uint32_t)&service->base, (uint32_t)service->lib_handle, (uint32_t)service->base.userdata, (uint32_t)completion->bulk_userdata );
             service->base.callback(completion->reason, completion->header,
                service->lib_handle, completion->bulk_userdata);
          }
@@ -1493,6 +1543,12 @@ completion_thread(void *arg)
             VCHI_CALLBACK_REASON_T vchi_reason =
                vchiq_reason_to_vchi[completion->reason];
             service->vchi_callback(service->base.userdata, vchi_reason, completion->bulk_userdata);
+         }
+
+         if ((completion->reason == VCHIQ_SERVICE_CLOSED) &&
+             instance->use_close_delivered)
+         {
+            RETRY(ret,ioctl(service->fd, VCHIQ_IOC_CLOSE_DELIVERED, service->handle));
          }
       }
    }
@@ -1550,6 +1606,8 @@ create_service(VCHIQ_INSTANCE_T instance,
             (srv->vchi_callback != vchi_callback)))
          {
             /* There is another server using this fourcc which doesn't match */
+            vcos_log_info("service %x already using fourcc 0x%x",
+               srv->lib_handle, params->fourcc);
             service = NULL;
             status = VCHIQ_ERROR;
             break;
@@ -1604,6 +1662,8 @@ create_service(VCHIQ_INSTANCE_T instance,
    if (status == VCHIQ_SUCCESS)
    {
       *phandle = service->lib_handle;
+      vcos_log_info("service handle %x lib_handle %x using fourcc 0x%x",
+         service->handle, service->lib_handle, params->fourcc);
    }
    else
    {

@@ -1,4 +1,4 @@
-add_library (mmal_core
+add_library (mmal_core ${LIBRARY_TYPE}
    mmal_format.c
    mmal_port.c
    mmal_port_clock.c
@@ -13,3 +13,12 @@ add_library (mmal_core
 
 target_link_libraries (mmal_core vcos)
 
+install(TARGETS mmal_core DESTINATION lib)
+install(FILES
+   mmal_buffer_private.h
+   mmal_clock_private.h
+   mmal_component_private.h
+   mmal_core_private.h
+   mmal_port_private.h
+   DESTINATION include/interface/mmal/core
+)

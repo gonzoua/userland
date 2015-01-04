@@ -329,7 +329,7 @@ typedef enum OMX_INDEXTYPE {
     OMX_IndexConfigCameraFlashConfig,       /**<reference: OMX_CONFIG_CAMERAFLASHCONFIGTYPE */
     OMX_IndexConfigCaptureRawImageURI,      /**<reference: OMX_PARAM_CONTENTURITYPE */
     OMX_IndexConfigCameraStripeFuncMinLines, /**<reference: OMX_PARAM_U32TYPE */
-    OMX_IndexConfigCameraAlgorithmVersionDeprecated,   /**<reference: OMX_CONFIG_CAMERAALGORITHMVERSIONTYPE */
+    OMX_IndexConfigCameraAlgorithmVersionDeprecated,   /**<reference: OMX_PARAM_U32TYPE */
     OMX_IndexConfigCameraIsoReferenceValue,  /**<reference: OMX_PARAM_U32TYPE */
     OMX_IndexConfigCameraCaptureAbortsAutoFocus, /**<reference: OMX_CONFIG_BOOLEANTYPE */
     OMX_IndexConfigBrcmClockMissCount,      /**<reference: OMX_PARAM_U32TYPE */
@@ -355,7 +355,7 @@ typedef enum OMX_INDEXTYPE {
     OMX_IndexParamBrcmDisableProprietaryTunnels,   /**< reference: OMX_PARAM_BRCMDISABLEPROPRIETARYTUNNELSTYPE */
     OMX_IndexParamBrcmOutputBufferSize,         /**<  reference: OMX_PARAM_BRCMOUTPUTBUFFERSIZETYPE */
     OMX_IndexParamBrcmRetainMemory,             /**< reference: OMX_PARAM_BRCMRETAINMEMORYTYPE */
-    OMX_IndexConfigCanFocus_Deprecated,                    /**< reference: OMX_CONFIG_CANFOCUSTYPE */
+    OMX_IndexConfigCanFocus_Deprecated,                    /**< reference: OMX_PARAM_U32TYPE */
     OMX_IndexParamBrcmImmutableInput,           /**< reference: OMX_CONFIG_BOOLEANTYPE */
     OMX_IndexParamDynamicParameterFile,        /**< reference: OMX_PARAM_CONTENTURITYPE */
 
@@ -436,7 +436,7 @@ typedef enum OMX_INDEXTYPE {
     OMX_IndexParamCommonUseStcTimestamps,      /**< reference: OMX_PARAM_TIMESTAMPMODETYPE */
     OMX_IndexConfigBufferStall,                /**< reference: OMX_CONFIG_BUFFERSTALLTYPE */
     OMX_IndexConfigRefreshCodec,               /**< reference: OMX_CONFIG_BOOLEANTYPE */
-    OMX_IndexParamCaptureStatus,               /**< reference: OMX_CONFIG_BOOLEANTYPE */
+    OMX_IndexParamCaptureStatus,               /**< reference: OMX_PARAM_CAPTURESTATETYPE */
     OMX_IndexConfigTimeInvalidStartTime,       /**< reference: OMX_TIME_CONFIG_TIMESTAMPTYPE */
     OMX_IndexConfigLatencyTarget,              /**< reference: OMX_CONFIG_LATENCYTARGETTYPE */
     OMX_IndexConfigMinimiseFragmentation,      /**< reference: OMX_CONFIG_BOOLEANTYPE */
@@ -460,15 +460,15 @@ typedef enum OMX_INDEXTYPE {
     OMX_IndexParamRateControlModel,            /**< reference: OMX_PARAM_U32TYPE */
     OMX_IndexParamBrcmExtraBuffers,            /**< reference: OMX_PARAM_U32TYPE */
     OMX_IndexConfigFieldOfView,                /**< reference: OMX_CONFIG_BRCMFOVTYPE */
-    OMX_IndexParamBrcmAlignHoriz,              /**< reference: OMX_CONFIG_U32TYPE */
-    OMX_IndexParamBrcmAlignVert,               /**< reference: OMX_CONFIG_U32TYPE */
+    OMX_IndexParamBrcmAlignHoriz,              /**< reference: OMX_PARAM_U32TYPE */
+    OMX_IndexParamBrcmAlignVert,               /**< reference: OMX_PARAM_U32TYPE */
     OMX_IndexParamColorSpace,                  /**< reference: OMX_PARAM_COLORSPACETYPE */
     OMX_IndexParamBrcmDroppablePFrames,        /**< reference: OMX_CONFIG_BOOLEANTYPE */
     OMX_IndexParamBrcmVideoInitialQuant,       /**< reference: OMX_PARAM_U32TYPE */
     OMX_IndexParamBrcmVideoEncodeQpP,          /**< reference: OMX_PARAM_U32TYPE */
+    OMX_IndexParamBrcmVideoRCSliceDQuant,      /**< reference: OMX_PARAM_U32TYPE */
 
     // 0x7f0000c0
-    OMX_IndexParamBrcmVideoRCSliceDQuant,      /**< reference: OMX_PARAM_U32TYPE */
     OMX_IndexParamBrcmVideoFrameLimitBits,     /**< reference: OMX_PARAM_U32TYPE */
     OMX_IndexParamBrcmVideoPeakRate,           /**< reference: OMX_PARAM_U32TYPE */
     OMX_IndexConfigBrcmVideoH264DisableCABAC,  /**< reference: OMX_CONFIG_BOOLEANTYPE */
@@ -481,12 +481,12 @@ typedef enum OMX_INDEXTYPE {
     OMX_IndexParamBrcmHeaderOnOpen,            /**< reference: OMX_CONFIG_BOOLEANTYPE */
     OMX_IndexConfigBrcmUseRegisterFile,        /**< reference: OMX_CONFIG_BOOLEANTYPE */
     OMX_IndexConfigBrcmRegisterFileFailFatal,  /**< reference: OMX_CONFIG_BOOLEANTYPE */
-    OMX_IndexParamBrcmConfigFileRegisters,     /**< reference: OMX_CONFIG_CONFIGFILETYPE */
-    OMX_IndexParamBrcmConfigFileChunkRegisters,/**< reference: OMX_CONFIG_CONFIGFILECHUNKTYPE */
+    OMX_IndexParamBrcmConfigFileRegisters,     /**< reference: OMX_PARAM_BRCMCONFIGFILETYPE */
+    OMX_IndexParamBrcmConfigFileChunkRegisters,/**< reference: OMX_PARAM_BRCMCONFIGFILECHUNKTYPE */
     OMX_IndexParamBrcmAttachLog,               /**< reference: OMX_CONFIG_BOOLEANTYPE */
+    OMX_IndexParamCameraZeroShutterLag,        /**< reference: OMX_CONFIG_ZEROSHUTTERLAGTYPE */
 
     // 0x7f0000d0
-    OMX_IndexParamCameraZeroShutterLag,        /**< reference: OMX_CONFIG_ZEROSHUTTERLAGTYPE */
     OMX_IndexParamBrcmFpsRange,                /**< reference: OMX_PARAM_BRCMFRAMERATERANGETYPE */
     OMX_IndexParamCaptureExposureCompensation, /**< reference: OMX_PARAM_S32TYPE */
     OMX_IndexParamBrcmVideoPrecodeForQP,       /**< reference: OMX_CONFIG_BOOLEANTYPE */
@@ -495,9 +495,27 @@ typedef enum OMX_INDEXTYPE {
     OMX_IndexConfigBrcmFlashRequired,          /**< reference: OMX_CONFIG_BOOLEANTYPE */
     OMX_IndexParamBrcmVideoDrmProtectBuffer,   /**< reference: OMX_PARAM_BRCMVIDEODRMPROTECTBUFFERTYPE */
     OMX_IndexParamSWSaturationDisable,         /**< reference: OMX_CONFIG_BOOLEANTYPE */
+    OMX_IndexParamBrcmVideoDecodeConfigVD3,    /**< reference: OMX_PARAM_BRCMVIDEODECODECONFIGVD3TYPE */
+    OMX_IndexConfigBrcmPowerMonitor,           /**< reference: OMX_CONFIG_BOOLEANTYPE */
+    OMX_IndexParamBrcmZeroCopy,                /**< reference: OMX_CONFIG_PORTBOOLEANTYPE */
+    OMX_IndexParamBrcmVideoEGLRenderDiscardMode,   /**< reference: OMX_CONFIG_PORTBOOLEANTYPE */
+    OMX_IndexParamBrcmVideoAVC_VCLHRDEnable,    /**< reference: OMX_CONFIG_PORTBOOLEANTYPE*/
+    OMX_IndexParamBrcmVideoAVC_LowDelayHRDEnable, /**< reference: OMX_CONFIG_PORTBOOLEANTYPE*/
+    OMX_IndexParamBrcmVideoCroppingDisable,    /**< reference: OMX_CONFIG_PORTBOOLEANTYPE*/
+    OMX_IndexParamBrcmVideoAVCInlineHeaderEnable, /**< reference: OMX_CONFIG_PORTBOOLEANTYPE*/
 
     // 0x7f0000f0
     OMX_IndexConfigBrcmAudioDownmixCoefficients = 0x7f0000f0, /**< reference: OMX_CONFIG_BRCMAUDIODOWNMIXCOEFFICIENTS */
+    OMX_IndexConfigBrcmAudioDownmixCoefficients8x8,           /**< reference: OMX_CONFIG_BRCMAUDIODOWNMIXCOEFFICIENTS8x8 */
+    OMX_IndexConfigBrcmAudioMaxSample,                        /**< reference: OMX_CONFIG_BRCMAUDIOMAXSAMPLE */
+    OMX_IndexConfigCustomAwbGains,                            /**< reference: OMX_CONFIG_CUSTOMAWBGAINSTYPE */
+    OMX_IndexParamRemoveImagePadding,                         /**< reference: OMX_CONFIG_PORTBOOLEANTYPE*/
+    OMX_IndexParamBrcmVideoAVCInlineVectorsEnable,            /**< reference: OMX_CONFIG_PORTBOOLEANTYPE */
+    OMX_IndexConfigBrcmRenderStats,                           /**< reference: OMX_CONFIG_BRCMRENDERSTATSTYPE */
+    OMX_IndexConfigBrcmCameraAnnotate,                        /**< reference: OMX_CONFIG_BRCMANNOTATETYPE */
+    OMX_IndexParamBrcmStereoscopicMode,                       /**< reference :OMX_CONFIG_BRCMSTEREOSCOPICMODETYPE */
+    OMX_IndexParamBrcmLockStepEnable,                         /**< reference: OMX_CONFIG_PORTBOOLEANTYPE */
+    OMX_IndexParamBrcmTimeScale,                              /**< reference: OMX_PARAM_U32TYPE */
 
     OMX_IndexMax = 0x7FFFFFFF
 } OMX_INDEXTYPE;

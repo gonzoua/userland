@@ -120,6 +120,18 @@ VCHPRE_ void vc_tv_register_callback(TVSERVICE_CALLBACK_T callback, void *callba
 VCHPRE_ void vc_tv_unregister_callback(TVSERVICE_CALLBACK_T callback);
 
 /**
+ * <DFN>vc_tv_unregister_callback</DNF> removes a function registered with
+ * <DFN>vc_tv_register_callback</DNF> from the list of callbacks.
+ * In contrast to vc_tv_unregister_callback this one matches not only the
+ * function pointer but also the data pointer before removal.
+ *
+ * @param callback function
+ *
+ * @return void
+ */
+VCHPRE_ void vc_tv_unregister_callback_full(TVSERVICE_CALLBACK_T callback, void *callback_data);
+
+/**
  * In the following API any functions applying to HDMI only will have hdmi_
  * in the name, ditto for SDTV only will have sdtv_ in the name,
  * Otherwise the function applies to both SDTV and HDMI (e.g. power off)
@@ -492,6 +504,13 @@ VCHPRE_ int VCHPOST_ vc_tv_hdmi_get_property(HDMI_PROPERTY_PARAM_T *property);
  * @return  The notification reason as a string.
  */
 VCHPRE_ const char* vc_tv_notification_name(VC_HDMI_NOTIFY_T reason);
+
+/**
+ * Get the unique device ID from the EDID
+ * @param pointer to device ID struct
+ * @return zero if successful, non-zero if failed.
+ */
+VCHPRE_ int VCHPOST_  vc_tv_get_device_id(TV_DEVICE_ID_T *id);
 
 // temporary: maintain backwards compatibility
 VCHPRE_ int VCHPOST_ vc_tv_hdmi_get_supported_modes(HDMI_RES_GROUP_T group,

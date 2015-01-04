@@ -217,6 +217,9 @@ VCHPRE_ int VCHPOST_ vc_vchi_tv_init(VCHI_INSTANCE_T initialise_instance, VCHI_C
          0               // No overscan flags.
       };
 
+   if (tvservice_client.initialised)
+     return -2;
+
    vcos_log_set_level(VCOS_LOG_CATEGORY, VCOS_LOG_ERROR);
    vcos_log_register("tvservice-client", VCOS_LOG_CATEGORY);
 
@@ -327,6 +330,9 @@ VCHPRE_ void VCHPOST_ vc_vchi_tv_stop( void ) {
    // Wait for the current lock-holder to finish before zapping TV service
    uint32_t i;
 
+   if (!tvservice_client.initialised)
+      return;
+
    vcos_log_trace("[%s]", VCOS_FUNCTION);
    if(tvservice_lock_obtain() == 0)
    {
@@ -421,6 +427,42 @@ VCHPRE_ void VCHPOST_ vc_tv_unregister_callback(TVSERVICE_CALLBACK_T callback)
       for(i = 0; (i < TVSERVICE_MAX_CALLBACKS) && !done; i++)
       {
          if(tvservice_client.callbacks[i].notify_fn == callback)
+         {
+            tvservice_client.callbacks[i].notify_fn = NULL;
+            tvservice_client.callbacks[i].notify_data = NULL;
+            done = 1;
+         } // if
+      } // for
+      vcos_assert(done);
+      tvservice_lock_release();
+   }
+}
+
+/***********************************************************
+ * Name: vc_tv_unregister_callback_full
+ *
+ * Arguments:
+ *       callback function
+ *       callback function context
+ *
+ * Description: Unregister a previously-registered callback function for TV notifications
+ *
+ * Returns: -
+ *
+ ***********************************************************/
+VCHPRE_ void VCHPOST_ vc_tv_unregister_callback_full(TVSERVICE_CALLBACK_T callback, void *callback_data)
+{
+   vcos_assert(callback != NULL);
+
+   vcos_log_trace("[%s]", VCOS_FUNCTION);
+   if(tvservice_lock_obtain() == 0)
+   {
+      uint32_t done = 0;
+      uint32_t i;
+      for(i = 0; (i < TVSERVICE_MAX_CALLBACKS) && !done; i++)
+      {
+         if(tvservice_client.callbacks[i].notify_fn == callback &&
+            tvservice_client.callbacks[i].notify_data == callback_data)
          {
             tvservice_client.callbacks[i].notify_fn = NULL;
             tvservice_client.callbacks[i].notify_data = NULL;
@@ -980,7 +1022,6 @@ VCHPRE_ int VCHPOST_ vc_tv_hdmi_power_on_explicit_new(HDMI_MODE_T mode, HDMI_RES
 
    vcos_log_trace("[%s] mode %d group %d code %d", VCOS_FUNCTION,
          mode, group, code);
-
    param.hdmi_mode = mode;
    param.group = group;
    param.mode = code;
@@ -1039,14 +1080,16 @@ VCHPRE_ int VCHPOST_ vc_tv_power_off( void ) {
  *       array of TV_SUPPORT_MODE_T structs, length of array, pointer to preferred group,
  *       pointer to prefer mode code (the last two pointers can be NULL, if the caller
  *       is not interested to learn what the preferred mode is)
- *       If passed in a null supported_modes array, the number of
- *       supported modes in that particular group will be returned instead
+ *       If passed in a null supported_modes array, or the length of array
+ *       is zero, the number of supported modes in that particular group
+ *       will be returned instead
  *
  * Description: Get supported modes for a particular group,
  *              the length of array limits no. of modes returned
  *
  * Returns: Returns the number of modes actually written (or the number
- *          of supported modes if passed in a null array). (< 0 for error)
+ *          of supported modes if passed in a null array or length of array==0).
+ *          Returns < 0 for error.
  *
  ***********************************************************/
 VCHPRE_ int VCHPOST_ vc_tv_hdmi_get_supported_modes_new(HDMI_RES_GROUP_T group,
@@ -1125,7 +1168,7 @@ VCHPRE_ int VCHPOST_ vc_tv_hdmi_get_supported_modes_new(HDMI_RES_GROUP_T group,
             }
          } else {
             //The request also terminates if there are no supported modes reported
-            vcos_log_error("No supported modes returned for group %s in [%s]", HDMI_RES_GROUP_NAME(group), VCOS_FUNCTION);
+            vcos_log_trace("No supported modes returned for group %s in [%s]", HDMI_RES_GROUP_NAME(group), VCOS_FUNCTION);
          }
       } else {
          vcos_log_error("Failed to query supported modes for group %s in [%s]", HDMI_RES_GROUP_NAME(group), VCOS_FUNCTION);
@@ -1550,7 +1593,28 @@ VCHPRE_ int VCHPOST_ vc_tv_hdmi_get_supported_modes(HDMI_RES_GROUP_T group,
    }
    free(supported_modes_new);
 
-   return j;
+}
+
+/**
+ * Get the unique device ID from the EDID
+ * @param pointer to device ID struct
+ * @return zero if successful, non-zero if failed.
+ */
+VCHPRE_ int VCHPOST_  vc_tv_get_device_id(TV_DEVICE_ID_T *id) {
+   int ret = -1;
+   TV_DEVICE_ID_T param;
+   memset(&param, 0, sizeof(TV_DEVICE_ID_T));
+   if(vcos_verify(id)) {
+      if((ret = tvservice_send_command_reply( VC_TV_GET_DEVICE_ID, NULL, 0,
+                                              &param, sizeof(param))) == VC_HDMI_SUCCESS) {
+         memcpy(id, &param, sizeof(TV_DEVICE_ID_T));
+      } else {
+         id->vendor[0] = '\0';
+         id->monitor_name[0] = '\0';
+         id->serial_num = 0;
+      }
+   }
+   return ret;
 }
 
 // temporary: maintain backwards compatibility
@@ -1561,7 +1625,7 @@ VCHPRE_ int VCHPOST_ vc_tv_hdmi_power_on_explicit(HDMI_MODE_T mode, HDMI_RES_GRO
       property.param1 = HDMI_RES_GROUP_CEA;
       property.param2 = 0;
       vc_tv_hdmi_set_property(&property);
-      group == HDMI_RES_GROUP_CEA;
+      group = HDMI_RES_GROUP_CEA;
    }
    return vc_tv_hdmi_power_on_explicit_new(mode, group, code);
 }
