@@ -3,7 +3,7 @@ if (WIN32)
    set(VCOS_PLATFORM win32)
 else ()
    set(VCOS_PLATFORM pthreads)
-   add_definitions(-Wall -Werror)
+   add_definitions(-Wall -Werror -Wno-error=parentheses-equality -Wno-error=enum-conversion)
 endif ()
 
 include_directories( ../../../..

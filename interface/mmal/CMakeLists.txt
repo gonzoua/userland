@@ -3,7 +3,7 @@ if (NOT DEFINED LIBRARY_TYPE)
 set(LIBRARY_TYPE SHARED)
 endif (NOT DEFINED LIBRARY_TYPE)
 
-add_definitions(-Wall -Werror)
+add_definitions(-Wall -Werror -Wno-error=enum-conversion)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     message(STATUS "${CMAKE_CXX_COMPILER_VERSION}")
