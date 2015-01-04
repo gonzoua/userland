@@ -120,7 +120,8 @@ try_compile(HAVE_MTRACE
 
 # test for existence of execinfo.h header
 include(CheckIncludeFile)
-check_include_file(execinfo.h HAVE_EXECINFO_H)
+# XXXBSD: disable execinfo for now
+# check_include_file(execinfo.h HAVE_EXECINFO_H)
 
 add_definitions(-DHAVE_CMAKE_CONFIG)
 configure_file (
