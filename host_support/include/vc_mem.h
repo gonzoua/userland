@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if !defined( VC_MEM_H )
 #define VC_MEM_H
 
-#include <linux/ioctl.h>
+#include <sys/ioctl.h>
 
 #define VC_MEM_IOC_MAGIC  'v'
 
