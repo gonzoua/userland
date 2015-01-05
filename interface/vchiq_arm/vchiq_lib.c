@@ -1523,7 +1523,7 @@ completion_thread(void *arg)
 
       RETRY(ret, ioctl(instance->fd, VCHIQ_IOC_AWAIT_COMPLETION, &args));
 
-      if (ret < 0)
+      if (ret != 0)
          break;
 
       for (i = 0; i < args.count; i++)
