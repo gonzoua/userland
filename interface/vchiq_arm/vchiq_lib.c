@@ -1670,7 +1670,7 @@ create_service(VCHIQ_INSTANCE_T instance,
       vcos_mutex_lock(&instance->mutex);
 
       if (service)
-      	service->lib_handle = VCHIQ_SERVICE_HANDLE_INVALID;
+         service->lib_handle = VCHIQ_SERVICE_HANDLE_INVALID;
 
       vcos_mutex_unlock(&instance->mutex);
 
