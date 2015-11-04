@@ -303,7 +303,8 @@ VCHPRE_ int VCHPOST_ vc_vchi_tv_init(VCHI_INSTANCE_T initialise_instance, VCHI_C
 
    //Create the notifier task
    vcos_thread_attr_init(&attrs);
-   vcos_thread_attr_setstacksize(&attrs, 4096);
+   // XXX: It doesn't seem enough on FreeBSD
+   // vcos_thread_attr_setstacksize(&attrs, 4096);
    vcos_thread_attr_settimeslice(&attrs, 1);
 
    status = vcos_thread_create(&tvservice_notify_task, "HTV Notify", &attrs, tvservice_notify_func, &tvservice_client);
