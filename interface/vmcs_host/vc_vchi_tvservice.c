@@ -1594,6 +1594,7 @@ VCHPRE_ int VCHPOST_ vc_tv_hdmi_get_supported_modes(HDMI_RES_GROUP_T group,
    }
    free(supported_modes_new);
 
+   return 0;
 }
 
 /**

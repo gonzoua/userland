@@ -102,7 +102,7 @@ static MMAL_STATUS_T create_waitpool(MMAL_WAITPOOL_T *waitpool)
    status = vcos_semaphore_create(&waitpool->sem, VCOS_FUNCTION,
                                   MAX_WAITERS);
    if (status != VCOS_SUCCESS)
-      return MMAL_ENOSPC;
+      return status==VCOS_SUCCESS ? MMAL_SUCCESS : MMAL_ENOSPC;
 
    for (i=0; i<MAX_WAITERS; i++)
    {
@@ -124,8 +124,7 @@ static MMAL_STATUS_T create_waitpool(MMAL_WAITPOOL_T *waitpool)
       }
       vcos_semaphore_delete(&waitpool->sem);
    }
-
-   return (status == VCOS_SUCCESS) ? MMAL_SUCCESS : MMAL_ENOSPC;
+   return status==VCOS_SUCCESS ? MMAL_SUCCESS : MMAL_ENOSPC;
 }
 
 static void destroy_waitpool(MMAL_WAITPOOL_T *waitpool)
