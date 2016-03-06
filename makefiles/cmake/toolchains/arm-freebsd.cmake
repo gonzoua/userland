@@ -15,7 +15,8 @@ add_definitions("-DVCOS_DEFAULT_STACK_SIZE=16384")
 
 # rdynamic means the backtrace should work
 IF (CMAKE_BUILD_TYPE MATCHES "Debug")
-   add_definitions(-rdynamic)
+   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
+   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -rdynamic")
 ENDIF()
 
 # avoids annoying and pointless warnings from gcc
