@@ -1501,6 +1501,7 @@ completion_thread(void *arg)
    VCHIQ_AWAIT_COMPLETION_T args;
    VCHIQ_COMPLETION_DATA_T completions[8];
    void *msgbufs[8];
+   int ret;
 
    static const VCHI_CALLBACK_REASON_T vchiq_reason_to_vchi[] =
    {
@@ -1537,12 +1538,12 @@ completion_thread(void *arg)
          }
       }
 
-      RETRY(count, ioctl(instance->fd, VCHIQ_IOC_AWAIT_COMPLETION, &args));
+      RETRY(ret, ioctl(instance->fd, VCHIQ_IOC_AWAIT_COMPLETION, &args));
 
-      if (count <= 0)
+      if (ret != 0)
          break;
 
-      for (i = 0; i < count; i++)
+      for (i = 0; i < args.count; i++)
       {
          VCHIQ_COMPLETION_DATA_T *completion = &completions[i];
          VCHIQ_SERVICE_T *service = (VCHIQ_SERVICE_T *)completion->service_userdata;
@@ -1564,7 +1565,6 @@ completion_thread(void *arg)
          if ((completion->reason == VCHIQ_SERVICE_CLOSED) &&
              instance->use_close_delivered)
          {
-            int ret;
             RETRY(ret,ioctl(service->fd, VCHIQ_IOC_CLOSE_DELIVERED, service->handle));
          }
       }
