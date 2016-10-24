@@ -130,6 +130,7 @@ static int setup_auto_kill(int timeout_ms);
 #ifdef __linux__
 
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include "interface/vmcs_host/vc_cma.h"
 
 static void reserve_test(int reserve, int delay)
@@ -717,7 +718,6 @@ vchiq_signal_test(void)
    int fourcc;
 
    static int sizes[] = { 0, 1024, 2048, VCHIQ_MAX_MSG_SIZE };
-   unsigned int i;
 
    fourcc = VCHIQ_MAKE_FOURCC(g_servname[0], g_servname[1], g_servname[2], g_servname[3]);
 
@@ -848,7 +848,7 @@ do_functional_test(void)
    EXPECT(vchiq_queue_bulk_transmit(service2, clnt_service2_data, sizeof(clnt_service2_data), (void *)0x2001), VCHIQ_SUCCESS);
    for (i = 0; i < sizeof(clnt_service1_data); i++)
    {
-      clnt_service1_data[i] = i;
+      clnt_service1_data[i] = (char)i;
    }
    EXPECT(vchiq_queue_bulk_transmit(service, clnt_service1_data, sizeof(clnt_service1_data), (void*)0x1001), VCHIQ_SUCCESS);
 
@@ -896,7 +896,7 @@ bulk_tests_only:
    for (size = 64; size < FUN2_MAX_DATA_SIZE; size<<=1)
    {
       static const int aligns[] = { 0, 1, 31 };
-      unsigned int i;
+
       for (i = 0; i < vcos_countof(aligns); i++)
       {
          int srvr_align = aligns[i];
@@ -1073,7 +1073,6 @@ do_vchi_ping_test(VCHI_SERVICE_HANDLE_T service, int size, int async, int oneway
       start = vcos_getmicrosecs();
       for (i = 0; i < iters; i++)
       {
-         uint32_t actual;
          vchi_msg_queue(service, ping_buf, msg_size, VCHI_FLAGS_BLOCK_UNTIL_QUEUED, 0);
          vchi_msg_dequeue(service, pong_buf, sizeof(pong_buf), &actual, VCHI_FLAGS_BLOCK_UNTIL_OP_COMPLETE);
       }
@@ -1141,7 +1140,7 @@ do_vchi_ping_test(VCHI_SERVICE_HANDLE_T service, int size, int async, int oneway
       }
       end = vcos_getmicrosecs();
 
-      printf("vchi bulk (size %d, async) -> %fus\n", size, ((float)(end - start))/iters);
+      printf("vchi bulk (size %d, %d async, %d oneway) -> %fus\n", size, async, oneway, ((float)(end - start))/iters);
 
       vcos_sleep(40);
    }
@@ -1170,7 +1169,7 @@ do_vchi_ping_test(VCHI_SERVICE_HANDLE_T service, int size, int async, int oneway
       }
       end = vcos_getmicrosecs();
 
-      printf("vchi bulk (size %d, %d async) -> %fus\n", size, async, ((float)(end - start))/iters);
+      printf("vchi bulk (size %d, %d oneway) -> %fus\n", size, oneway, ((float)(end - start))/iters);
 
       vcos_sleep(60);
    }
@@ -1316,6 +1315,7 @@ static VCHIQ_STATUS_T
 clnt_callback(VCHIQ_REASON_T reason, VCHIQ_HEADER_T *header,
    VCHIQ_SERVICE_HANDLE_T service, void *bulk_userdata)
 {
+   int data;
    vcos_mutex_lock(&g_mutex);
    if (reason == VCHIQ_MESSAGE_AVAILABLE)
    {
@@ -1323,7 +1323,7 @@ clnt_callback(VCHIQ_REASON_T reason, VCHIQ_HEADER_T *header,
          vchiq_release_message(service, header);
       else
       /* Responses of length 0 are not sync points */
-      if ((header->size >= 4) && (*(int *)header->data == MSG_ECHO))
+      if ((header->size >= 4) && (memcpy(&data, header->data, sizeof(data)), data == MSG_ECHO))
       {
          /* This is a complete echoed packet */
          if (g_params.verify && (mem_check(header->data, bulk_tx_data[ctrl_received % NUM_BULK_BUFS], g_params.blocksize) != 0))

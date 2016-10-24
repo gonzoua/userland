@@ -420,7 +420,7 @@ static const char *status_mode( TV_DISPLAY_STATE_T *tvstate ) {
          }
       }
       //This is the format's aspect ratio
-      tmp = status_sprintf(mode_str, MAX_STATUS_STR_LENGTH, &offset, " %s", aspect_ratio_str(tvstate->display.sdtv.display_options.aspect));
+      tmp = status_sprintf(mode_str, MAX_STATUS_STR_LENGTH, &offset, " %s", aspect_ratio_sd_str(tvstate->display.sdtv.display_options.aspect));
    } else if (tvstate->state & VC_LCD_ATTACHED_DEFAULT) {
       status_sprintf(mode_str, MAX_STATUS_STR_LENGTH, &offset, "LCD");
    } else {
@@ -727,8 +727,8 @@ int main( int argc, char **argv )
    uint32_t         power_on_explicit_mode;
    uint32_t         power_on_explicit_drive = HDMI_MODE_HDMI;
    HDMI_RES_GROUP_T get_modes_group = HDMI_RES_GROUP_INVALID;
-   SDTV_MODE_T sdtvon_mode;
-   SDTV_ASPECT_T sdtvon_aspect;
+   SDTV_MODE_T sdtvon_mode = SDTV_MODE_NTSC;
+   SDTV_ASPECT_T sdtvon_aspect = SDTV_ASPECT_UNKNOWN;
 
    // Initialize VCOS
    vcos_init();
