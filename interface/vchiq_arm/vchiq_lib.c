@@ -568,7 +568,15 @@ vchiq_get_client_id(VCHIQ_SERVICE_HANDLE_T handle)
    if (!service)
       return VCHIQ_ERROR;
 
-   return ioctl(service->fd, VCHIQ_IOC_GET_CLIENT_ID, service->handle);
+   /*
+    * FIXME FREEBSD:
+    *  Due to differences in Linux and FreeBSD ioctl return path
+    *  the actual value returned from ioctl handler is set to
+    *  errno while ioctl result is -1 or 0
+    */
+   ioctl(service->fd, VCHIQ_IOC_GET_CLIENT_ID, service->handle);
+
+   return (errno);
 }
 
 void *
